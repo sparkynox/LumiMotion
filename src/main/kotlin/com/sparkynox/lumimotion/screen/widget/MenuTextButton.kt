@@ -1,61 +1,104 @@
 package com.sparkynox.lumimotion.screen.widget
 
+import net.minecraft.client.MinecraftClient
+import net.minecraft.client.gui.Drawable
 import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.widget.ClickableWidget
-import net.minecraft.client.gui.widget.PressableWidget
+import net.minecraft.client.gui.Element
+import net.minecraft.client.gui.Selectable
+import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder
+import net.minecraft.client.gui.screen.narration.NarrationPart
 import net.minecraft.text.Text
-import net.minecraft.util.math.MathHelper
 
 /**
- * A menu entry styled like the reference title screens: plain text label,
- * left-aligned, with a rectangular outline that only shows up while hovered.
- * No vanilla button background/texture - just text + conditional box, so every
- * entry in the list lines up at the same width and height regardless of label length.
+ * Menu entry styled like the reference title screens: plain text label,
+ * hover-only rectangular outline, uniform width regardless of label length.
+ *
+ * Implements Drawable/Element/Selectable directly instead of extending
+ * ClickableWidget/PressableWidget. On 1.21.11, Mojang made ClickableWidget's
+ * renderWidget() final, which crashed this widget with IncompatibleClassChangeError
+ * since it used to override that method. Implementing the interfaces ourselves
+ * means there's nothing of Mojang's left to override, so a future version sealing
+ * another method in ClickableWidget can't break this again the same way.
  */
 class MenuTextButton(
-    x: Int,
-    y: Int,
-    width: Int,
-    height: Int,
-    text: Text,
+    var x: Int,
+    var y: Int,
+    val width: Int,
+    val height: Int,
+    private val text: Text,
     private val accentColor: Int,
     private val onPress: (MenuTextButton) -> Unit
-) : PressableWidget(x, y, width, height, text) {
+) : Drawable, Element, Selectable {
 
-    override fun onPress() = onPress(this)
+    private var hovered = false
+    private var focused = false
 
-    override fun renderWidget(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
-        val client = net.minecraft.client.MinecraftClient.getInstance()
+    fun isMouseOver(mouseX: Double, mouseY: Double): Boolean =
+        mouseX >= x && mouseX < x + width && mouseY >= y && mouseY < y + height
+
+    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+        hovered = isMouseOver(mouseX.toDouble(), mouseY.toDouble())
+
+        val client = MinecraftClient.getInstance()
         val textRenderer = client.textRenderer
 
-        val textColor = if (isHovered) 0xFFFFFF else 0xE0E0E0
+        val textColor = if (hovered) 0xFFFFFF else 0xE0E0E0
         context.drawTextWithShadow(
             textRenderer,
-            message,
+            text,
             x,
             y + (height - textRenderer.fontHeight) / 2,
             textColor
         )
 
-        // hover box - only drawn while the mouse is actually over this entry
-        if (isHovered) {
+        if (hovered) {
             val boxPad = 6
             val left = x - boxPad
             val top = y - 2
             val right = x + width + boxPad
             val bottom = y + height + 2
-            drawBoxOutline(context, left, top, right, bottom, accentColor)
+            context.drawHorizontalLine(left, right, top, accentColor)
+            context.drawHorizontalLine(left, right, bottom, accentColor)
+            context.drawVerticalLine(left, top, bottom, accentColor)
+            context.drawVerticalLine(right, top, bottom, accentColor)
         }
     }
 
-    private fun drawBoxOutline(context: DrawContext, left: Int, top: Int, right: Int, bottom: Int, color: Int) {
-        context.drawHorizontalLine(left, right, top, color)
-        context.drawHorizontalLine(left, right, bottom, color)
-        context.drawVerticalLine(left, top, bottom, color)
-        context.drawVerticalLine(right, top, bottom, color)
+    // -- Element (click/keyboard handling) --
+
+    override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
+        if (button == 0 && isMouseOver(mouseX, mouseY)) {
+            onPress(this)
+            return true
+        }
+        return false
     }
 
-    override fun appendClickableNarrations(builder: net.minecraft.client.gui.screen.narration.NarrationMessageBuilder) {
-        appendDefaultNarrations(builder)
+    override fun mouseReleased(mouseX: Double, mouseY: Double, button: Int): Boolean = false
+
+    override fun keyPressed(keyCode: Int, scanCode: Int, modifiers: Int): Boolean {
+        // Enter/Space activates when focused, matches vanilla button keyboard nav
+        if (focused && (keyCode == 257 || keyCode == 32)) {
+            onPress(this)
+            return true
+        }
+        return false
+    }
+
+    override fun setFocused(focused: Boolean) {
+        this.focused = focused
+    }
+
+    override fun isFocused(): Boolean = focused
+
+    // -- Selectable (tab navigation / accessibility) --
+
+    override fun getType(): Selectable.SelectionType =
+        if (focused) Selectable.SelectionType.FOCUSED
+        else if (hovered) Selectable.SelectionType.HOVERED
+        else Selectable.SelectionType.NONE
+
+    override fun appendNarrations(builder: NarrationMessageBuilder) {
+        builder.put(NarrationPart.TITLE, text)
     }
 }
