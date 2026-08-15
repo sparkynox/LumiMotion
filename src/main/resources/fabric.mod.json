@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "id": "lumimotion",
+  "version": "${version}",
+  "name": "LumiMotion",
+  "description": "Play MP4-extracted PNG frame sequences as animated backgrounds on the title screen and pause menu.",
+  "authors": ["SparkyNox"],
+  "contact": {
+    "homepage": "https://www.modrinth.com/user/sparkynox"
+  },
+  "license": "MIT",
+  "icon": "assets/lumimotion/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      {
+        "adapter": "kotlin",
+        "value": "com.sparkynox.lumimotion.LumiMotion"
+      }
+    ],
+    "modmenu": [
+      {
+        "adapter": "kotlin",
+        "value": "com.sparkynox.lumimotion.LumiModMenuIntegration"
+      }
+    ]
+  },
+  "mixins": [
+    "lumimotion.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.16.9",
+    "minecraft": "~1.21.4",
+    "fabric-language-kotlin": ">=1.13.0",
+    "fabric-api": "*"
+  },
+  "suggests": {
+    "modmenu": "*"
+  }
+}
