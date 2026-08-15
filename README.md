@@ -1,8 +1,10 @@
 # LumiMotion
 
-**Animated PNG-sequence backgrounds for your Minecraft title screen and pause menu.**
+**Animated PNG-sequence background for your Minecraft title screen.**
 
-LumiMotion plays back a folder of PNG frames — which you extract from a video yourself using any tool of your choice — as a smooth animated background in Minecraft. The mod itself only handles displaying pre-made PNG sequences; it does not read, decode, or convert video files.
+LumiMotion plays back a folder of PNG frames — which you extract from a video yourself using any tool of your choice — as a smooth animated background. The mod itself only handles displaying pre-made PNG sequences; it does not read, decode, or convert video files.
+
+Right now the animated background fully replaces the **title screen** (custom menu, no vanilla panorama). The pause menu can also show a video, but only as a background layer behind vanilla's existing pause menu — it isn't a full custom replacement there yet.
 
 Written entirely in Kotlin, built on Fabric.
 
