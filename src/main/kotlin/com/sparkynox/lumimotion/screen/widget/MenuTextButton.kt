@@ -33,7 +33,7 @@ class MenuTextButton(
     private var hovered = false
     private var focused = false
 
-    fun isMouseOver(mouseX: Double, mouseY: Double): Boolean =
+    override fun isMouseOver(mouseX: Double, mouseY: Double): Boolean =
         mouseX >= x && mouseX < x + width && mouseY >= y && mouseY < y + height
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
